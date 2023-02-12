@@ -1,0 +1,50 @@
+﻿@model WebApplication3.Models.Products
+<div class="row">
+    @Html.HiddenFor(model => model.Id)            <div class="col-12 col-xl-6 col-lg-6 col-md-6 mb-2">
+
+        <div class="form-floating ">
+            @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control", placeholder = @Html.DisplayNameFor(m => m.Name) + "..." } })
+            @Html.LabelFor(model => model.Name, null, new { @class = "control-label float-end" })
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6 col-lg-6 col-md-6 mb-2">
+
+        <div class="form-floating ">
+            @Html.EditorFor(model => model.Row, new { htmlAttributes = new { @class = "form-control", placeholder = @Html.DisplayNameFor(m => m.Row) + "..." } })
+            @Html.LabelFor(model => model.Row, null, new { @class = "control-label float-end" })
+        </div>
+    </div>
+
+    <div class="col-12 my-2"><ul id="ProductsErros" class="list-group myListGroup"></ul></div>
+</div>
+<script type="text/javascript">
+    $("#ProductsForm").submit(function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var submit = form.find(':submit');
+        submit.prop("disabled", true);
+        $("#ProductsErros").html('');
+        var data =form.serialize();
+        $("#" + form.attr("id") + " input").prop("disabled", true);
+        $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: data,
+            success: function (data) {
+                if (data.isOk)
+                    window.location.reload();
+                else {
+                    submit.prop("disabled", false);
+                    $("#" + form.attr("id") + " input").prop("disabled", false);
+                    $.each( data.errs,function (t) {
+                        $("#ProductsErros").append('<li class="list-group-item list-group-item-danger">' + data.errs[t].ErrorMessage+'</li>');
+                    });
+                }
+            }, error: function () {
+                submit.prop("disabled", false);
+                $("#" + form.attr("id") + " input").prop("disabled", false);
+            }
+        });
+    });
+</script>

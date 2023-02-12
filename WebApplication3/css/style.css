@@ -1,0 +1,17 @@
+﻿@media only screen and (max-width: 1170px)
+{
+    .type-wrap
+    {
+        display:none !important;
+    }
+    .submit-input {
+ 
+    }
+}
+
+
+@font-face
+{
+    font-family:"nafas";
+    src:url(../font/nafas.ttf);
+}

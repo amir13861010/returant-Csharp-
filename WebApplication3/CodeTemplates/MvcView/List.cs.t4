@@ -1,0 +1,252 @@
+﻿<#@ template language="C#" HostSpecific="True" #>
+<#@ output extension=".cshtml" #>
+<#@ include file="Imports.include.t4" #>
+@model IEnumerable<#= "<" + ViewDataTypeName + ">" #>
+<#
+if(IsPartialView) {
+#>
+<#
+} else if(IsLayoutPageSelected) {
+#>
+@{
+    ViewBag.Title = "<#= ViewName#>";
+    ViewBag.ItemName = "<#= ViewName#>";
+    ViewBag.ItemNames = "<#= ViewName#>";
+<#
+if (!String.IsNullOrEmpty(LayoutPageFile)) {
+#>
+    Layout = "<#= LayoutPageFile#>";
+<#
+}
+#>
+}
+<#
+} else {
+#>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title><#= ViewName #></title>
+</head>
+<body>
+<#
+    PushIndent("    ");
+}
+#>
+<div class="app-content content">
+    <div class="content-overlay"></div>
+    <div class="header-navbar-shadow"></div>
+    <div class="content-wrapper">
+   <div class="content-body">
+            <!-- Zero configuration table -->
+            <section id="basic-datatable">
+                <div class="row">
+                    <div class="col-12">
+
+                                <div class="card-body card-dashboard">
+                                    <button type="button" class="btn btn-outline-success edit<#= ViewDataTypeShortName#>" id="C@(Guid.NewGuid())"><i class="fa fa-plus"></i>  <span class="d-none d-sm-inline"> جدید</span></button>
+                                    <div class="table-responsive">
+                                        <table id="example" class="table dataTable table-borderless table-striped  zero-configuration" width="100%">
+                                            <thead>            <tr>
+<#
+IEnumerable<PropertyMetadata> properties = ModelMetadata.Properties;
+foreach (PropertyMetadata property in properties) {
+    if (property.Scaffold && !property.IsPrimaryKey && !property.IsForeignKey) {
+#>
+<#
+        // This is a temporary work around until core scaffolding provides support for independent associations.
+        if (property.IsAssociation && GetRelatedModelMetadata(property) == null) {
+            continue;
+        }
+#>
+        <th>
+            @Html.DisplayNameFor(model => model.<#= GetValueExpression(property) #>)
+        </th>
+<#
+    }
+}
+#>
+        <th></th>
+    </tr>
+</thead>
+@foreach (var item in Model) {
+    <tr>
+<#
+foreach (PropertyMetadata property in properties) {
+    if (property.Scaffold && !property.IsPrimaryKey && !property.IsForeignKey) {
+#>
+<#
+        // This is a temporary work around until core scaffolding provides support for independent associations.
+        if (property.IsAssociation && GetRelatedModelMetadata(property) == null) {
+            continue;
+        }
+#>
+        <td>
+            @Html.DisplayFor(modelItem => <#= "item." + GetValueExpression(property) #>)
+        </td>
+<#
+    }
+}
+
+string pkName = GetPrimaryKeyName();
+if (pkName != null) {
+#>
+       <td>
+       <button type="button" id="e@(item.Id)" class="btn btn-outline-primary edit<#= ViewDataTypeShortName#>"><i class="fa fa-edit"></i>  <span class="d-none d-sm-inline">  ویرایش</span></button>
+        <button type="button" id="D@(item.Id)" data="@item.Name" class="btn btn-outline-danger delete<#= ViewDataTypeShortName#> ml-1"><i class="fa fa-remove"></i>  <span class="d-none d-sm-inline">حذف </span></button>
+        </td>
+<#
+} else {
+#>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+            @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+            @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+        </td>
+<#
+}
+#>
+    </tr>
+}
+  @if (Model == null || Model.Count() == 0)
+            {
+                <tr class="alert alert-warning">  <td colspan="2">موردی یافت نشد</td></tr>
+            }
+            </table>
+                                     </div>
+                                </div>
+                         
+                    </div>
+                </div>
+            </section>
+            <!--/ Zero configuration table -->
+        </div>
+    </div>
+</div>
+<!-- END: Content-->
+<!-- Modal -->
+<div class="modal fade text-left" id="inlineForm" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel33" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel33">افزودن/ویرایش @ViewBag.ItemName</h4>
+                <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @using (Html.BeginForm("<#= ViewDataTypeShortName#>Item", "<#= ViewDataTypeShortName#>", FormMethod.Post, new { @id = "<#= ViewDataTypeShortName#>Form" })) {
+                @Html.AntiForgeryToken()
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button id="<#= ViewDataTypeShortName#>Submit" type="submit" class="btn tn btn-outline-success col-3" >اعمال</button>
+                    <button Submit" type="button" class="btn btn-outline-warning col-3" data-bs-dismiss="modal">الان نه</button>
+                </div>
+                <script type="text/javascript">
+                    $(".edit<#= ViewDataTypeShortName#>").click(function () {
+                        var item = $(this);
+                        var id = item.attr("id").substring(1);
+                        $("#inlineForm .modal-body").html('');
+                        $.get('@Url.Action("Get<#= ViewDataTypeShortName#>", "<#= ViewDataTypeShortName#>")' + '?Id=' + id, function (data) {
+                            $('#body').html(data);
+                            $("#inlineForm .modal-body").html(data);
+                            $("#inlineForm .modal-title").html("افزودن/ویرایش @ViewBag.ItemName");
+                            $('#inlineForm').modal('show');
+                        });
+                    });
+                </script>
+            }
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+@using (Html.BeginForm()) {
+    @Html.AntiForgeryToken();
+    <script type="text/javascript">
+     $(".delete<#= ViewDataTypeShortName#>").on("click", function () {
+         var item = $(this);
+         var name = item.attr("data");
+        Swal.fire({
+            title: "آیا از حذف @ViewBag.ItemName <br/>'" + name + "'<br/>' اطمینان دارید؟",
+            text: "این عمل برگشت پذیر نمی باشد.",
+            type: "warning",
+            showCancelButton: !0,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "بله حذف شود",
+            cancelButtonText: "انصراف",
+            confirmButtonClass: "btn btn-info",
+            cancelButtonClass: "btn btn-danger mx-2",
+            buttonsStyling: !1,
+        }).then(function (t) {
+            if (t.value) {
+                Swal.showLoading();
+                Swal.getCancelButton().setAttribute('disabled', '');
+                var features = {};
+                features["id"] = item.attr("id").substring(1);
+                features["__RequestVerificationToken"] = $("input[name=__RequestVerificationToken]").eq(0).val();
+                var obj = JSON.stringify(features);
+                var ddata = $.parseJSON(obj)
+                $.ajax({
+                    url: '@Url.Action("Delete", "<#= ViewDataTypeShortName#>")',
+                    type: "post",
+                    dataType: "json",
+                    data: ddata,
+                    error: function (xhr, status, error) {
+                        Swal.getCancelButton().setAttribute('disabled', 'true');
+                        Swal.fire({
+                            type: "error",
+                            title: "حذف ناموفق",
+                            text: "@ViewBag.ItemName '" + name + "' حذف نشد",
+                            confirmButtonClass: "btn btn-danger mx-2",
+                            confirmButtonText: "تایید",
+                        });
+                    },
+                    success: function (data) {
+                        if (data.isErr == false) {
+
+                            Swal.fire({
+                                type: "success",
+                                title: "حذف موفق",
+                                text: "@ViewBag.ItemName '" + name + "' حذف شد",
+                                confirmButtonClass: "btn btn-success",
+                                confirmButtonText: "تایید",
+                            }).then(function () {
+                                window.location.reload();
+
+                            });
+                        }
+                        else {
+                            Swal.getCancelButton().setAttribute('disabled', 'true');
+                            Swal.fire({
+                                type: "error",
+                                title: "حذف ناموفق",
+                                text: "@ViewBag.ItemName '" + name + "' حذف نشد",
+                                confirmButtonClass: "btn btn-danger",
+                                confirmButtonText: "تایید",
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
+    </script>
+}
+<#
+// The following code closes the tag used in the case of a view using a layout page and the body and html tags in the case of a regular view page
+#>
+<#
+if(!IsPartialView && !IsLayoutPageSelected) {
+    ClearIndent();
+#>
+</body>
+</html>
+<#
+}
+#>
+<#@ include file="ModelMetadataFunctions.cs.include.t4" #>

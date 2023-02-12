@@ -1,0 +1,109 @@
+﻿<#@ template language="C#" HostSpecific="True" #>
+<#@ output extension=".cshtml" #>
+<#@ include file="Imports.include.t4" #>
+@model <#= ViewDataTypeName #>
+<#
+// The following chained if-statement outputs the file header code and markup for a partial view, a view using a layout page, or a regular view.
+if(IsPartialView) {
+#>
+
+<#
+} else if(IsLayoutPageSelected) {
+#>
+
+@{
+    ViewBag.Title = "<#= ViewName#>";
+<#
+if (!String.IsNullOrEmpty(LayoutPageFile)) {
+#>
+    Layout = "<#= LayoutPageFile#>";
+<#
+}
+#>
+}
+
+
+
+<#
+} else {
+#>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title><#= ViewName #></title>
+</head>
+<body>
+<#
+    PushIndent("    ");
+}
+#>
+<div class="container mainwhite " >
+    
+    <h4 class="text-danger " style="margin-right :10px;">آیا برای حذف پروژه مورد نظر مطمئن هستید؟</h4>
+    <hr />
+ @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            <div class="col-md-4 clearfix   " style="padding-left :10px; margin-top :10px;margin-left:10px;">
+                <button type="submit" class="btn btn-danger" style="font-family :naskh"><span class="glyphicon glyphicon-trash  "></span> &nbsp; @ViewBag.Title</button>
+                  <#    if(GetPrimaryKeyName() !=""){ #>
+    <a class="btn btn-warning" href="@Url.Action("Index", "<#=ViewDataTypeShortName#>", new { PrId = Model.<#=GetPrimaryKeyName()#> })"><span class="glyphicon glyphicon-log-out  "></span>&nbsp;بازگشت </a>
+                <#    } else{ #>
+ <a class="btn btn-warning" href="@Url.Action("Index", "<#=ViewDataTypeShortName#>")"><span class="glyphicon glyphicon-log-out  "></span>&nbsp;بازگشت </a>
+        <# }#>
+            </div>
+        }
+    <div class="row">
+        
+
+        <div class="col pull-left  col-md-12 col-lg-12 col-sm-12 col-xs-12" style="margin-top :10px;">
+            <dl class="dl-horizontal ">
+<#
+    
+foreach (PropertyMetadata property in ModelMetadata.Properties) {
+      
+    if (property.Scaffold && !property.IsPrimaryKey && !property.IsForeignKey) {
+#>
+<#
+        // This is a temporary work around until core scaffolding provides support for independent associations.
+        if (property.IsAssociation && GetRelatedModelMetadata(property) == null) {
+            continue;
+        }
+#>
+        <dt>
+            @Html.DisplayNameFor(model => model.<#= GetValueExpression(property) #>)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.<#= GetValueExpression(property) #>)
+        </dd>
+
+<#
+    }
+}
+#>
+</dl>
+    </div>
+       
+    </div>
+</div>
+<#
+// The following code closes the tag used in the case of a view using a layout page and the body and html tags in the case of a regular view page
+#>
+<#
+if(!IsPartialView && !IsLayoutPageSelected) {
+    ClearIndent();
+#>
+</body>
+</html>
+<#
+}
+#>
+<#@ include file="ModelMetadataFunctions.cs.include.t4" #>

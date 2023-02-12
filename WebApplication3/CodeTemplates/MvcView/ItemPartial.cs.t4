@@ -1,0 +1,74 @@
+﻿<#@ template language="C#" HostSpecific="True" #>
+<#@ output extension=".cshtml" #>
+<#@ include file="Imports.include.t4" #>
+@model <#=ViewDataTypeName #>
+<div class="row">
+<#  
+foreach (PropertyMetadata property in ModelMetadata.Properties)
+{
+    if (property.Scaffold && !property.IsAssociation) 
+    {
+        if (property.IsPrimaryKey) 
+        {
+          #>@Html.HiddenFor(model => model.<#= property.PropertyName #>)<#
+        }
+        else 
+        if (!property.IsReadOnly) 
+        {
+          #>
+            <div class="col-12 col-xl-6 col-lg-6 col-md-6 mb-2">
+        
+          <div class="form-floating ">
+          <#
+                if (property.IsForeignKey) 
+                {
+                  #>     @Html.DropDownList("<#= property.PropertyName #>", null, htmlAttributes: new { @class = "form-control " })
+                  <#
+               }
+               else
+               {
+                 #>     @Html.EditorFor(model => model.<#= property.PropertyName #>, new { htmlAttributes = new { @class = "form-control", placeholder = @Html.DisplayNameFor(m => m.<#= property.PropertyName #>)+"..." } } )
+                 <#
+               }
+                 #>            @Html.LabelFor(model => model.<#= property.PropertyName #>, null, new { @class = "control-label float-end" })
+        </div>
+</div>   
+
+<#
+        }
+      }
+    }
+#>
+  <div class="col-12 my-2"><ul id="<#=ViewDataTypeShortName #>Erros" class="list-group myListGroup"></ul></div>
+</div>
+ <script type="text/javascript" >
+    $("#<#=ViewDataTypeShortName #>Form").submit(function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var submit = form.find(':submit');
+        submit.prop("disabled", true);
+        $("#<#=ViewDataTypeShortName #>Erros").html('');
+        var data =form.serialize();
+        $("#" + form.attr("id") + " input").prop("disabled", true);
+        $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: data,
+            success: function (data) {
+                if (data.isOk)
+                    window.location.reload();
+                else {
+                    submit.prop("disabled", false);
+                    $("#" + form.attr("id") + " input").prop("disabled", false);
+                    $.each( data.errs,function (t) {
+                        $("#<#=ViewDataTypeShortName #>Erros").append('<li class="list-group-item list-group-item-danger">' + data.errs[t].ErrorMessage+'</li>');
+                    });
+                }
+            }, error: function () {
+                submit.prop("disabled", false);
+                $("#" + form.attr("id") + " input").prop("disabled", false);
+            }
+        });
+    });
+</script>
+<#@ include file="ModelMetadataFunctions.cs.include.t4" #>
